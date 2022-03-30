@@ -81,8 +81,8 @@ def main() -> None:
                velocity=Vector3D.from_polar(angle_xy=0, angle_xz=0, length=1)),
 
         Planet(name="2", diameter=0.5, mass=2, position=Vector3D.from_cartesian(0, 0, 0)),
-        Planet(name="2", diameter=0.5, mass=2, position=Vector3D.from_cartesian(0.51, 0, 0)),
-        Planet(name="2", diameter=0.5, mass=2, position=Vector3D.from_cartesian(1.02, 0, 0))
+        Planet(name="2", diameter=0.5, mass=3, position=Vector3D.from_cartesian(0.5, 0.2, 0.1)),
+        Planet(name="2", diameter=0.5, mass=2, position=Vector3D.from_cartesian(1, 0, 0))
     ])
     # setup camera
     camera.x = 0

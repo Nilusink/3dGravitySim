@@ -141,6 +141,9 @@ class Vector:
 
 
 class Vector3D:
+    """
+    Simple 3D vector class
+    """
     x: float
     y: float
     z: float
@@ -148,6 +151,7 @@ class Vector3D:
     angle_xz: float
     length_xy: float
     length: float
+
     def __init__(self):
         self.__x: float = 0
         self.__y: float = 0
@@ -245,17 +249,25 @@ class Vector3D:
         """
         :param value: (angle_xy, angle_xz, length)
         """
-        self.__angle_xy, self.__angle_xz, self.length = value
+        self.__angle_xy = self.normalize_angle(value[0])
+        self.__angle_xz = self.normalize_angle(value[1])
+        self.__length = value[2]
         self.__update("p")
 
     @staticmethod
     def from_polar(angle_xy: float, angle_xz: float, length: float) -> "Vector3D":
+        """
+        create a Vector3D from polar form
+        """
         v = Vector3D()
         v.polar = angle_xy, angle_xz, length
         return v
 
     @staticmethod
     def from_cartesian(x: float, y: float, z: float) -> "Vector3D":
+        """
+        create a Vector3D from cartesian form
+        """
         v = Vector3D()
         v.cartesian = x, y, z
         return v
@@ -265,7 +277,7 @@ class Vector3D:
         """
         calculate the x, y and z components of length facing (angle1, angle2)
         """
-        tmp = np.cos(angle1) * length
+        tmp = np.cos(angle2) * length
         z = np.sin(angle2) * length
         x = np.cos(angle1) * tmp
         y = np.sin(angle1) * tmp
@@ -312,8 +324,7 @@ class Vector3D:
         return Vector3D.from_cartesian(x=self.x / other, y=self.y / other, z=self.z / other)
 
     # internal functions
-    def __update(self, calc_from: str, do_check: bool = True) -> None:
-        do_check = False
+    def __update(self, calc_from: str) -> None:
         match calc_from:
             case "p":
                 self.__length_xy = np.cos(self.angle_xz) * self.length
@@ -321,16 +332,12 @@ class Vector3D:
                 self.__x = x
                 self.__y = y
                 self.__z = z
-                if do_check:
-                    self.__update("c", do_check=False)
 
             case "c":
                 self.__length_xy = np.sqrt(self.y**2 + self.x**2)
                 self.__angle_xy = np.arctan2(self.y, self.x)
                 self.__angle_xz = np.arctan2(self.z, self.x)
                 self.__length = np.sqrt(self.x**2 + self.y**2 + self.z**2)
-                if do_check:
-                    self.__update("p", do_check=False)
 
     def __repr__(self) -> str:
         return f"<\n" \
@@ -492,6 +499,11 @@ class Simulation:
                 done_objects = []
                 for now_object in self.objects:
                     if type(now_object) == Planet:
+                        if now_object.position.z-now_object.diameter/2 <= -1:
+                            now_object.acceleration = 0
+                            now_object.velocity.angle_xz *= -1
+                            continue
+
                         for influence_object in self.objects:
                             if type(influence_object) == Planet and influence_object is not now_object:
                                 now_object: Planet
@@ -509,6 +521,7 @@ class Simulation:
                                     # now object
                                     a = delta.angle_xy - now_object.velocity.angle_xy
                                     b = delta.angle_xz - now_object.velocity.angle_xz
+                                    # seperate the vector in three different directions (two to be ignored, one to be calculated with)
                                     x, y, z = Vector3D.calculate_with_angles(now_object.velocity.length, a, b)
 
                                     now_collision = Vector3D.from_polar(angle_xy=delta.angle_xy,
